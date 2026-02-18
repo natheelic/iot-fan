@@ -79,12 +79,13 @@
 
     <script>
         const BASE_API_URL = '/api/device';
-        const PASSWORD = "iotfanenlic"; // เปลี่ยนรหัสผ่านนี้เป็นรหัสที่คุณต้องการ (แนะนำให้ใช้รหัสที่แข็งแกร่งและไม่บอกใคร)
+        const AUTH_API_URL = '/api/auth';
         let currentDeviceId = 1; // เริ่มต้นที่เบอร์ 1
         let state = { manual_mode: false, fan_command: false, target_temp: 28.0, swing_command: false };
 
         window.onload = function() {
-            if (sessionStorage.getItem('loggedIn') === 'true') {
+            const token = sessionStorage.getItem('token');
+            if (token) {
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainUI').style.display = 'block';
                 fetchData();
@@ -94,20 +95,27 @@
             }
         };
 
-        function login() {
+        async function login() {
             const pass = document.getElementById('passwordInput').value;
-            if (pass === PASSWORD) {
-                sessionStorage.setItem('loggedIn', 'true');
+            try {
+                const res = await fetch(AUTH_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass })
+                });
+                if (!res.ok) throw new Error('Login failed');
+                const data = await res.json();
+                sessionStorage.setItem('token', data.token);
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainUI').style.display = 'block';
                 fetchData();
-            } else {
-                alert("รหัสผ่านผิด กรุณาลองใหม่");
+            } catch (e) {
+                alert('รหัสผ่านผิด กรุณาลองใหม่');
             }
         }
 
         function logout() {
-            sessionStorage.removeItem('loggedIn');
+            sessionStorage.removeItem('token');
             location.reload();
         }
 
@@ -126,8 +134,15 @@
         }
 
         async function fetchData() {
+            const token = sessionStorage.getItem('token');
+            if (!token) {
+                logout();
+                return;
+            }
             try {
-                const res = await fetch(getApiUrl());
+                const res = await fetch(getApiUrl(), {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if(!res.ok) throw new Error("API Error");
                 const data = await res.json();
                 state = data;
@@ -206,20 +221,38 @@
         async function saveTemp() {
             const val = document.getElementById('inputTarget').value;
             if(!val) return alert("กรุณาใส่อุณหภูมิ");
+            const token = sessionStorage.getItem('token');
+            if (!token) {
+                alert('Session expired, please login again');
+                logout();
+                return;
+            }
             await fetch(getApiUrl(), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from_app: true, password: PASSWORD, set_target_temp: parseFloat(val) })
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ from_app: true, set_target_temp: parseFloat(val) })
             });
             alert("บันทึกเรียบร้อย!"); fetchData();
         }
 
         async function sendCommand(manual, fan, swing) {
             state.manual_mode = manual; state.fan_command = fan; state.swing_command = swing;
+            const token = sessionStorage.getItem('token');
+            if (!token) {
+                alert('Session expired, please login again');
+                logout();
+                return;
+            }
             await fetch(getApiUrl(), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from_app: true, password: PASSWORD, manual_mode: manual, fan_command: fan, swing_command: swing })
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ from_app: true, manual_mode: manual, fan_command: fan, swing_command: swing })
             });
             fetchData();
         }
