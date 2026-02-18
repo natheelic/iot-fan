@@ -12,10 +12,10 @@
 #define DHTTYPE DHT11
 
 // ================= WIFI & API =================
-const char* ssid = "EN_POR";
-const char* password = "0812622140";
+const char* ssid = ".@LICEC-Student-WiFi";
+const char* password = "";
 // เติม ?id=1 ต่อท้าย
-const char* apiUrl = "https://iot-fan-ppkz.vercel.app/api/device?id=1"; 
+const char* apiUrl = "https://iot-fan-enlic.vercel.app/api/device?id=1"; 
 
 // ================= OBJECTS =================
 DHT dht(DHTPIN, DHTTYPE);

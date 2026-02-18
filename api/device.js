@@ -5,8 +5,6 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
-  const APP_PASSWORD = process.env.APP_PASSWORD || 'iotfansecure2023';
-
   // *** อ่านค่า ID จาก URL (เช่น ?id=2) ถ้าไม่ส่งมาให้ใช้ 1 เป็นค่าเริ่มต้น ***
   const device_id = req.query.id || 1;
 
@@ -27,15 +25,6 @@ export default async function handler(req, res) {
     const { temp, motion, from_app, manual_mode, fan_command, set_target_temp, swing_command } = req.body;
 
     if (from_app) {
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      const token = authHeader.split(' ')[1];
-      if (!token || !token.startsWith('authenticated_')) {
-        return res.status(401).json({ error: 'Invalid token' });
-      }
-
       let updateData = { updated_at: new Date() };
       if (manual_mode !== undefined) updateData.manual_mode = manual_mode;
       if (fan_command !== undefined) updateData.fan_command = fan_command;
