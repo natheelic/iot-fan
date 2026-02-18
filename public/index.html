@@ -9,14 +9,25 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm relative">
+    <div id="loginOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-lg font-bold mb-4">เข้าสู่ระบบ</h2>
+            <input type="password" id="passwordInput" class="border p-2 w-full mb-4" placeholder="รหัสผ่าน">
+            <button onclick="login()" class="bg-blue-500 text-white px-4 py-2 rounded">เข้าสู่ระบบ</button>
+        </div>
+    </div>
+
+    <div id="mainUI" style="display:none">
         
         <div class="mb-6 bg-gray-100 p-2 rounded-lg flex justify-between items-center">
             <span class="text-xs font-bold text-gray-500 ml-2">เลือกอุปกรณ์:</span>
-            <select id="deviceSelect" onchange="changeDevice()" class="bg-white border text-gray-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-32 shadow-sm font-bold">
-                <option value="1">พัดลม 1</option>
-                <option value="2">พัดลม 2</option>
-            </select>
+            <div class="flex items-center gap-2">
+                <select id="deviceSelect" onchange="changeDevice()" class="bg-white border text-gray-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 w-32 shadow-sm font-bold">
+                    <option value="1">พัดลม 1</option>
+                    <option value="2">พัดลม 2</option>
+                </select>
+                <button onclick="logout()" class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-red-600">ออก</button>
+            </div>
         </div>
 
         <div id="statusBadge" class="absolute top-20 right-6 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-300 text-gray-600 shadow-sm flex items-center gap-1">
@@ -68,8 +79,37 @@
 
     <script>
         const BASE_API_URL = '/api/device';
+        const PASSWORD = "iotfansecure2023"; // เปลี่ยนรหัสผ่านนี้เป็นรหัสที่คุณต้องการ (แนะนำให้ใช้รหัสที่แข็งแกร่งและไม่บอกใคร)
         let currentDeviceId = 1; // เริ่มต้นที่เบอร์ 1
         let state = { manual_mode: false, fan_command: false, target_temp: 28.0, swing_command: false };
+
+        window.onload = function() {
+            if (sessionStorage.getItem('loggedIn') === 'true') {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainUI').style.display = 'block';
+                fetchData();
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainUI').style.display = 'none';
+            }
+        };
+
+        function login() {
+            const pass = document.getElementById('passwordInput').value;
+            if (pass === PASSWORD) {
+                sessionStorage.setItem('loggedIn', 'true');
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainUI').style.display = 'block';
+                fetchData();
+            } else {
+                alert("รหัสผ่านผิด กรุณาลองใหม่");
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('loggedIn');
+            location.reload();
+        }
 
         // ฟังก์ชันเปลี่ยนอุปกรณ์
         function changeDevice() {
@@ -169,7 +209,7 @@
             await fetch(getApiUrl(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from_app: true, set_target_temp: parseFloat(val) })
+                body: JSON.stringify({ from_app: true, password: PASSWORD, set_target_temp: parseFloat(val) })
             });
             alert("บันทึกเรียบร้อย!"); fetchData();
         }
@@ -179,7 +219,7 @@
             await fetch(getApiUrl(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from_app: true, manual_mode: manual, fan_command: fan, swing_command: swing })
+                body: JSON.stringify({ from_app: true, password: PASSWORD, manual_mode: manual, fan_command: fan, swing_command: swing })
             });
             fetchData();
         }
@@ -191,5 +231,6 @@
         setInterval(fetchData, 2000);
         fetchData();
     </script>
+    </div>
 </body>
 </html>
