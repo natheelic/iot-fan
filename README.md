@@ -55,7 +55,7 @@
 ## 🚀 การติดตั้งและนำไปใช้งาน (Deployment & Setup)
 
 ### ส่วนที่ 1: การตั้งค่า Backend และ Database (Supabase & Vercel)
-1. นำไฟล์โครงสร้างไปสร้าง Table บนฐานข้อมูล Supabase ภายใต้ชื่อตาราง `fan_state` (จำเป็นต้องมี Column เช่น `id`, `current_temp`, `target_temp`, `motion_detected`, `manual_mode`, `fan_command`, `swing_command`, `device_last_seen`, `updated_at`)
+1. สร้าง Table บน Supabase โดยเปิด **SQL Editor** แล้วรันไฟล์ `supabase-setup.sql` ที่อยู่ในโปรเจกต์ (สร้างตาราง `fan_state` พร้อม Row สำหรับอุปกรณ์ 2 ตัว และตั้ง RLS ให้เรียบร้อย)
 2. คัดลอกและสร้างไฟล์ `.env` ขึ้นมาจาก `.env.example`
 3. ตั้งค่าสภาพแวดล้อม (Environment Variables) เช่น:
    ```env
@@ -88,6 +88,23 @@
 2. เมื่อเข้าเว็บไซต์ ระบบจะแสดง Modal แบบ Popup "กรุณาใส่รหัสผ่าน" - ให้กรอกรหัส `ACCESS_PASSWORD` ที่ตั้งไว้ในระบบหลังบ้านเพื่อเปิดล็อก (ล็อกแล้วมีผล 24 ชั่วโมง)
 3. ควบคุมอุปกรณ์ได้ตามความต้องการ ข้อมูลจะ Update และคอยตรวจเช็ค (Polling) อัตโนมัติในทุก ๆ 2 วินาที
 4. สามารถตรวจสอบสถานะการทำงานของ ESP ว่าเครื่อง Online มีสถานะไฟเขียวหรือมีการหลุดการเชื่อมต่อได้อย่างรวดเร็วที่มุมบนขวาของหน้าต่าง
+
+---
+
+## 📁 โครงสร้างโปรเจกต์ (Project Structure)
+
+```
+iot-fan/
+├── package.json            # Dependencies (supabase-js, jsonwebtoken)
+├── supabase-setup.sql      # SQL สำหรับสร้างตารางบน Supabase
+├── api/
+│   ├── auth.js             # POST /api/auth → ตรวจรหัสผ่าน, ออก JWT
+│   └── device.js           # GET/POST /api/device?id={n} → อ่าน/เขียนสถานะอุปกรณ์
+└── public/
+    ├── index.html           # Web Dashboard (Tailwind CSS)
+    ├── esp8266-1.ino        # Firmware สำหรับอุปกรณ์ตัวที่ 1
+    └── esp8266-2.ino        # Firmware สำหรับอุปกรณ์ตัวที่ 2
+```
 
 ---
 *Created automatically with AI.*
